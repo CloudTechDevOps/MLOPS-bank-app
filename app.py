@@ -48,7 +48,7 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/health', methods=['GET'])
+@app.route('/healthhhhh', methods=['GET'])
 def health():
     if "successfully" in model_status:
         return jsonify({
