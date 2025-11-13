@@ -31,7 +31,7 @@ def predict():
         credit_score = float(data.get('credit_score'))
         gender = data.get('gender').lower()
         married = data.get('married').lower()
-        no = float(data.get('no'))
+      #  no = float(data.get('no'))
 
         # Encode categorical features
         gender_encoded = le_gender.transform([gender])[0]
