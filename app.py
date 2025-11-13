@@ -31,6 +31,7 @@ def predict():
         credit_score = float(data.get('credit_score'))
         gender = data.get('gender').lower()
         married = data.get('married').lower()
+        no = float(data.get('no'))
 
         # Encode categorical features
         gender_encoded = le_gender.transform([gender])[0]
@@ -48,7 +49,7 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/healthhhhh', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def health():
     if "successfully" in model_status:
         return jsonify({
