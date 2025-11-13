@@ -1,69 +1,66 @@
 from flask import Flask, request, jsonify, render_template
 import numpy as np
 import joblib
-import os
 
 app = Flask(__name__)
 
-# -------------------------------------
-# 1️⃣ Load Model and Encoders
-# -------------------------------------
+# ------------------------------
+# Load Model and Encoders
+# ------------------------------
 try:
-    model = joblib.load(os.path.join("models", "model_full.pkl"))
-    le_gender = joblib.load(os.path.join("models", "encoder_gender.pkl"))
-    le_married = joblib.load(os.path.join("models", "encoder_married.pkl"))
-    le_approved = joblib.load(os.path.join("models", "encoder_approved.pkl"))
-
-    # Check if model has metadata
-    if not hasattr(model, "expected_features"):
-        model.expected_features = ['age', 'income', 'loan_amount', 'loan_term', 'credit_score', 'gender', 'married']
-
+    model = joblib.load("model_full.pkl")
+    le_gender = joblib.load("encoder_gender.pkl")
+    le_married = joblib.load("encoder_married.pkl")
+    le_approved = joblib.load("encoder_approved.pkl")
     model_status = "Model loaded successfully"
+
+    # ✅ Store feature list for validation
+    model.expected_features = ['age', 'income', 'loan_amount', 'loan_term', 'credit_score', 'gender', 'married']
 
 except Exception as e:
     model = None
-    model_status = f"❌ Error loading model: {str(e)}"
+    le_gender = None
+    le_married = None
+    le_approved = None
+    model_status = f"Error loading model: {str(e)}"
 
 
-# -------------------------------------
-# 2️⃣ Home Route
-# -------------------------------------
+# ------------------------------
+# Routes
+# ------------------------------
 @app.route('/')
 def index():
     return render_template("form.html")
 
 
-# -------------------------------------
-# 3️⃣ Prediction Route
-# -------------------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         if model is None:
-            return jsonify({"error": "Model not loaded"}), 500
+            return jsonify({"error": "Model not trained or unavailable"}), 500
 
         data = request.get_json()
-
         if not data:
             return jsonify({"error": "No input data provided"}), 400
 
-        # ✅ Model-defined expected features
+        # ------------------------------
+        # Validate Feature Mismatch
+        # ------------------------------
         expected_fields = getattr(model, "expected_features", None)
         if expected_fields is None:
-            raise ValueError("Model not trained with feature metadata")
+            raise ValueError("Model missing expected feature metadata")
 
         received_fields = list(data.keys())
         extra_fields = [f for f in received_fields if f not in expected_fields]
         missing_fields = [f for f in expected_fields if f not in received_fields]
 
-        # ✅ Let model metadata trigger error if schema mismatched
+        # If mismatch — trigger simple user error
         if extra_fields or missing_fields:
-            raise ValueError(
-                f"Feature mismatch. Model trained with {expected_fields}, "
-                f"but received {received_fields}"
-            )
+            raise ValueError("Feature mismatch")
 
-        # ✅ Extract input
+        # ------------------------------
+        # Extract + Encode Inputs
+        # ------------------------------
         age = float(data.get('age'))
         income = float(data.get('income'))
         loan_amount = float(data.get('loan_amount'))
@@ -72,38 +69,29 @@ def predict():
         gender = data.get('gender').lower()
         married = data.get('married').lower()
 
-        # ✅ Encode categorical features
-        try:
-            gender_encoded = le_gender.transform([gender])[0]
-            married_encoded = le_married.transform([married])[0]
-        except Exception:
-            raise ValueError("Model not trained or invalid category provided")
+        gender_encoded = le_gender.transform([gender])[0]
+        married_encoded = le_married.transform([married])[0]
 
-        # ✅ Prepare input array
         input_features = np.array([[age, income, loan_amount, loan_term, credit_score, gender_encoded, married_encoded]])
 
-        # ✅ Predict
-        try:
-            prediction = model.predict(input_features)
-        except ValueError as ve:
-            raise ValueError(f"Model not trained or feature mismatch: {str(ve)}")
-
+        # ------------------------------
+        # Make Prediction
+        # ------------------------------
+        prediction = model.predict(input_features)
         result = le_approved.inverse_transform(prediction)[0]
 
-        return jsonify({
-            "prediction": result,
-            "status": "success"
-        })
+        return jsonify({"prediction": result, "status": "success"})
 
     except Exception as e:
+        # 🔥 Log the real error to backend
+        print("Detailed backend error:", str(e))
+
+        # 🚫 Show only a short message to user
         return jsonify({
-            "error": f"Model not trained or feature mismatch: {str(e)}"
+            "error": "Model not trained or invalid input. Please check fields."
         }), 400
 
 
-# -------------------------------------
-# 4️⃣ Health Check Route
-# -------------------------------------
 @app.route('/health', methods=['GET'])
 def health():
     if "successfully" in model_status:
@@ -118,9 +106,8 @@ def health():
         }), 500
 
 
-# -------------------------------------
-# 5️⃣ Run the Flask App
-# -------------------------------------
+# ------------------------------
+# Run Server
+# ------------------------------
 if __name__ == '__main__':
-    # Host 0.0.0.0 -> accessible publicly (e.g., AWS EC2 / Docker)
     app.run(debug=False, host='0.0.0.0', port=5000)
