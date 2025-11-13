@@ -6,8 +6,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #e3f2fd, #fce4ec);
-            background: linear-gradient(to left, #586975, #a48a93 );
+            background: linear-gradient(to left, #586975, #a48a93);
             margin: 0;
             padding: 0;
             display: flex;
@@ -17,7 +16,7 @@
         }
 
         .container {
-             background: #ffffff;
+            background: #ffffff;
             padding: 20px 100px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -41,7 +40,7 @@
             font-weight: bold;
             color: #14b4d4;
             background-color: #f0f4ff;
-            padding: px 8px;
+            padding: 2px 8px;
             border-radius: 20px;
         }
 
@@ -50,10 +49,9 @@
             padding: 10px;
             margin-top: 6px;
             border: 1px solid #ccc;
-            border-radius: 8px;
+            border-radius: 20px;
             font-size: 14px;
             transition: border 0.3s;
-            border-radius: 20px;
         }
 
         input:focus, select:focus {
@@ -96,12 +94,17 @@
 
         .error {
             color: #ff9800;
+            border: 1px solid #ff9800;
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1em;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>Loan Prediction MLOPS & Multicloud Devops by Veera Naresh IT evg</h2>
+    <h2>Loan Prediction MLOPS & Multicloud DevOps by Veera Naresh IT</h2>
     <form id="loanForm">
         <label for="age">Age:</label>
         <input type="number" name="age" required>
@@ -168,6 +171,14 @@
 
             const result = await response.json();
 
+            // ✅ Show backend model/feature errors clearly
+            if (result.error) {
+                resultDiv.textContent = "⚠ " + result.error;
+                resultDiv.classList.add("error");
+                return;
+            }
+
+            // ✅ Approved / Denied cases
             if (result.prediction === "approved") {
                 resultDiv.textContent = "✅ Loan Status: APPROVED";
                 resultDiv.classList.add("approved");
@@ -175,7 +186,7 @@
                 resultDiv.textContent = "❌ Loan Status: DENIED";
                 resultDiv.classList.add("denied");
             } else {
-                resultDiv.textContent = "⚠ Unexpected response.";
+                resultDiv.textContent = "⚠ Unexpected response format.";
                 resultDiv.classList.add("error");
             }
         } catch (err) {
