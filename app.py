@@ -14,16 +14,28 @@ try:
 except Exception as e:
     model_status = f"Error loading model: {str(e)}"
 
-@app.route('/')
-def index():
-    return render_template("form.html")
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json()
 
-        # Extract input
+        # Extract received features
+        received_fields = list(data.keys())
+
+        # ✅ Ask the model what features it was trained with
+        expected_fields = getattr(model, "expected_features", None)
+
+        if expected_fields is None:
+            raise ValueError("Model not trained with feature metadata")
+
+        # ✅ Detect unexpected or missing features
+        extra_fields = [f for f in received_fields if f not in expected_fields]
+        missing_fields = [f for f in expected_fields if f not in received_fields]
+
+        if extra_fields or missing_fields:
+            raise ValueError(f"Feature mismatch. Model trained with {expected_fields}, but received {received_fields}")
+
+        # ✅ Proceed if fields match
         age = float(data.get('age'))
         income = float(data.get('income'))
         loan_amount = float(data.get('loan_amount'))
@@ -31,37 +43,19 @@ def predict():
         credit_score = float(data.get('credit_score'))
         gender = data.get('gender').lower()
         married = data.get('married').lower()
-      #  no = float(data.get('no'))
 
-        # Encode categorical features
         gender_encoded = le_gender.transform([gender])[0]
         married_encoded = le_married.transform([married])[0]
 
-        # Create input feature vector
         input_features = np.array([[age, income, loan_amount, loan_term, credit_score, gender_encoded, married_encoded]])
 
         # Predict
         prediction = model.predict(input_features)
         result = le_approved.inverse_transform(prediction)[0]
 
-        return jsonify({"prediction": result, "input": data})
+        return jsonify({"prediction": result})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-@app.route('/health', methods=['GET'])
-def health():
-    if "successfully" in model_status:
         return jsonify({
-            "status": "ok",
-            "message": model_status
-        }), 200
-    else:
-        return jsonify({
-            "status": "error",
-            "message": model_status
-        }), 500
-
-if __name__ == '__main__':  # ✅ Corrected
-    # Use host='0.0.0.0' to expose it on AWS EC2/public IP
-    app.run(debug=False, host='0.0.0.0', port=5000)
+            "error": f"Model not trained or feature mismatch: {str(e)}"
+        }), 400
