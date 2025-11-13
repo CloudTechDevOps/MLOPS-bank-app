@@ -3,8 +3,17 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import joblib
 import random
+import os
 
-# Original + manually added examples
+# ----------------------------
+# 1️⃣ Reproducibility
+# ----------------------------
+random.seed(42)
+np.random.seed(42)
+
+# ----------------------------
+# 2️⃣ Base Data (manual samples)
+# ----------------------------
 raw_X = [
     [22, 40000, 15000, 12, 600, "male", "no"],
     [30, 50000, 20000, 24, 700, "female", "no"],
@@ -19,7 +28,9 @@ raw_X = [
     [30, 9999, 30000, 24, 700, "male", "yes"],
 ]
 
-# Generate synthetic samples to reach 1000 total
+# ----------------------------
+# 3️⃣ Generate Synthetic Samples
+# ----------------------------
 genders = ["male", "female"]
 married_options = ["yes", "no"]
 
@@ -36,7 +47,9 @@ while len(raw_X) < 1000:
         age, income, loan_amount, loan_term, credit_score, gender, married
     ])
 
-# Generate labels based on your rule
+# ----------------------------
+# 4️⃣ Rule-Based Labels
+# ----------------------------
 y = []
 for sample in raw_X:
     age, income, _, _, credit_score, _, _ = sample
@@ -45,21 +58,25 @@ for sample in raw_X:
     else:
         y.append("approved")
 
-# Encode gender and married features
+# ----------------------------
+# 5️⃣ Label Encoding
+# ----------------------------
 genders = [row[5] for row in raw_X]
 married_statuses = [row[6] for row in raw_X]
 
 le_gender = LabelEncoder()
 le_married = LabelEncoder()
+le_approved = LabelEncoder()
 
 gender_encoded = le_gender.fit_transform(genders)
 married_encoded = le_married.fit_transform(married_statuses)
+y_encoded = le_approved.fit_transform(y)
 
-# Build feature matrix
-X = []
-for i in range(len(raw_X)):
-    row = raw_X[i]
-    X.append([
+# ----------------------------
+# 6️⃣ Build Feature Matrix
+# ----------------------------
+X = np.array([
+    [
         row[0],             # age
         row[1],             # income
         row[2],             # loan_amount
@@ -67,22 +84,43 @@ for i in range(len(raw_X)):
         row[4],             # credit_score
         gender_encoded[i],  # encoded gender
         married_encoded[i], # encoded marital status
-    ])
+    ]
+    for i, row in enumerate(raw_X)
+], dtype=float)
 
-X = np.array(X, dtype=float)
-
-# Encode target labels
-le_approved = LabelEncoder()
-y_encoded = le_approved.fit_transform(y)
-
-# Train the model
-model = RandomForestClassifier()
+# ----------------------------
+# 7️⃣ Train Model
+# ----------------------------
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=10,
+    random_state=42
+)
 model.fit(X, y_encoded)
 
-# Save model and encoders
-joblib.dump(model, "model_full.pkl")
-joblib.dump(le_gender, "encoder_gender.pkl")
-joblib.dump(le_married, "encoder_married.pkl")
-joblib.dump(le_approved, "encoder_approved.pkl")
+# ----------------------------
+# 8️⃣ Store Expected Feature Metadata
+# ----------------------------
+feature_names = ['age', 'income', 'loan_amount', 'loan_term', 'credit_score', 'gender', 'married']
+model.expected_features = feature_names
 
-print("✅ Model trained with 1000 samples and saved.")
+# ----------------------------
+# 9️⃣ Save Model and Encoders
+# ----------------------------
+os.makedirs("models", exist_ok=True)
+
+joblib.dump(model, "models/model_full.pkl")
+joblib.dump(le_gender, "models/encoder_gender.pkl")
+joblib.dump(le_married, "models/encoder_married.pkl")
+joblib.dump(le_approved, "models/encoder_approved.pkl")
+
+# ----------------------------
+# 🔟 Verify and Print
+# ----------------------------
+print("✅ Model trained successfully with 1000 samples.")
+print(f"📦 Model expects features: {model.expected_features}")
+print("💾 Files saved in ./models/:")
+print("   - model_full.pkl")
+print("   - encoder_gender.pkl")
+print("   - encoder_married.pkl")
+print("   - encoder_approved.pkl")
