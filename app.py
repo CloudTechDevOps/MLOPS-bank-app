@@ -8,10 +8,10 @@ app = Flask(__name__)
 # Load Model and Encoders
 # ------------------------------
 try:
-    model = joblib.load("model_full.pkl")
-    le_gender = joblib.load("encoder_gender.pkl")
-    le_married = joblib.load("encoder_married.pkl")
-    le_approved = joblib.load("encoder_approved.pkl")
+    model = joblib.load("models/model_full.pkl")
+    le_gender = joblib.load("models/encoder_gender.pkl")
+    le_married = joblib.load("models/encoder_married.pkl")
+    le_approved = joblib.load("models/encoder_approved.pkl")
     model_status = "Model loaded successfully"
 
     # ✅ Store feature list for validation
