@@ -1,4 +1,4 @@
-name: Deploy Flask ML App with Health Check (Train model on EC2
+name: Deploy Flask ML App with Health Check (Train model on EC2)
 
 on:
   push:
@@ -11,32 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📦 Checkout Code
         uses: actions/checkout@v3
 
-      - name:  Set up SSH key
+      - name: 🔐 Set up SSH key
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name:  Backup Existing App on EC2 (overwrite always)
+      - name: 🧰 Backup Existing App on EC2 (overwrite always)
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} '
             if [ -d ~/mlapp ]; then
-              echo " Backing up to ~/mlapp-backup (overwriting if exists)"
+              echo "🔁 Backing up to ~/mlapp-backup (overwriting if exists)"
               rm -rf ~/mlapp-backup
               cp -r ~/mlapp ~/mlapp-backup
             else
-              echo " No existing app found to backup."
+              echo "ℹ️ No existing app found to backup."
             fi
           '
 
-      - name:  Upload New App Code to EC2
+      - name: 🚚 Upload New App Code to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} 'mkdir -p ~/mlapp'
           scp -o StrictHostKeyChecking=no -r * ec2-user@${{ secrets.EC2_HOST }}:~/mlapp/
 
-      - name:  Install Python & pip on EC2
+      - name: 🐍 Install Python & pip on EC2
         run: |
           ssh -tt ec2-user@${{ secrets.EC2_HOST }} '
             sudo yum install -y python3 &&
@@ -44,7 +44,7 @@ jobs:
             pip3 install --upgrade pip setuptools
           '
 
-      - name:  Install Python Dependencies
+      - name: 📦 Install Python Dependencies
         run: |
           ssh -tt ec2-user@${{ secrets.EC2_HOST }} '
             cd ~/mlapp &&
@@ -58,13 +58,13 @@ jobs:
             python3 train_model.py
           '
 
-      - name:  Stop Old Flask App and Start New
+      - name: 🚀 Stop Old Flask App and Start New
         run: |
           ssh -tt ec2-user@${{ secrets.EC2_HOST }} '
-            echo "Killing app on port 5000..."
+            echo "🛑 Killing app on port 5000..."
             PID=$(lsof -t -i:5000) && kill -9 $PID || echo "No app running on port 5000"
 
-            echo "Starting Flask app..."
+            echo "🚀 Starting Flask app..."
             cd ~/mlapp
             nohup python3 app.py > output.log 2>&1 < /dev/null & disown
             sleep 5
@@ -73,45 +73,45 @@ jobs:
             if [ -f ~/mlapp/output.log ]; then
               tail -n 20 ~/mlapp/output.log
             else
-              echo " output.log not found."
+              echo "❌ output.log not found."
             fi
           '
 
-      - name:  Wait for App to Boot
+      - name: ⏱️ Wait for App to Boot
         run: sleep 10
 
-      - name:  Health Check
+      - name: 🔍 Health Check
         run: |
-          echo " Running health check..."
+          echo "🔎 Running health check..."
           curl --fail http://${{ secrets.EC2_HOST }}:5000/health
 
-      - name:  Notify Success
+      - name: ✅ Notify Success
         if: success()
-        run: echo " Deployment succeeded and passed health check!"
+        run: echo "✅ Deployment succeeded and passed health check!"
 
-      - name: Rollback on Failure
+      - name: 🔁 Rollback on Failure
         if: failure()
         run: |
-          echo " Health check failed. Attempting rollback..."
+          echo "❌ Health check failed. Attempting rollback..."
           ssh -tt ec2-user@${{ secrets.EC2_HOST }} '
             if [ -d ~/mlapp-backup ]; then
-              echo " Restoring from backup..."
+              echo "🔁 Restoring from backup..."
               rm -rf ~/mlapp
               cp -r ~/mlapp-backup ~/mlapp
 
-              echo " Killing app on port 5000..."
+              echo "🛑 Killing app on port 5000..."
               PID=$(lsof -t -i:5000) && kill -9 $PID || echo "No app running"
 
-              echo " Restarting backup app..."
+              echo "🚀 Restarting backup app..."
               cd ~/mlapp
               nohup python3 app.py > output.log 2>&1 < /dev/null & disown
               sleep 5
 
-              echo " Verifying rollback health..."
+              echo "🔎 Verifying rollback health..."
               curl --fail http://localhost:5000/health \
-                && echo " Rollback succeeded" \
-                || echo "Rollback health check failed"
+                && echo "✅ Rollback succeeded" \
+                || echo "❌ Rollback health check failed"
             else
-              echo " No backup found. Manual recovery required."
+              echo "🚫 No backup found. Manual recovery required."
             fi
           '
