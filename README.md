@@ -1,17 +1,17 @@
-# 🏦 MLOps Bank App  
+#  MLOps Models 
 A machine learning project showcasing various ML models commonly used in banking applications such as fraud detection, customer churn prediction, credit scoring, customer segmentation, and more.  
 This repository demonstrates simple explanations of each model along with their typical use cases.
 
 ---
 
-## 📌 Machine Learning Models Used
+##  Machine Learning Models Used
 
 ### 1. **Logistic Regression**
 **What it does:**  
 Predicts binary outcomes such as yes/no, 0/1, true/false.
 
 **Example Use Case:**  
-➡️ Will the customer leave the bank? (Churn prediction)
+Will the customer leave the bank? (Churn prediction)
 
 ---
 
@@ -20,7 +20,7 @@ Predicts binary outcomes such as yes/no, 0/1, true/false.
 Makes decisions by asking simple if-else questions arranged in a tree structure.
 
 **Example Use Case:**  
-➡️ If age > 30 → approve product, else → decline.
+ If age > 30 → approve product, else → decline.
 
 ---
 
@@ -29,7 +29,7 @@ Makes decisions by asking simple if-else questions arranged in a tree structure.
 Builds many decision trees and combines their predictions for higher accuracy.
 
 **Example Use Case:**  
-➡️ Fraud detection, churn prediction, credit scoring.
+ Fraud detection, churn prediction, credit scoring.
 
 ---
 
@@ -38,7 +38,7 @@ Builds many decision trees and combines their predictions for higher accuracy.
 Boosting models that build trees sequentially while correcting previous errors. Extremely powerful for structured data.
 
 **Example Use Case:**  
-➡️ Popular in 90% of winning Kaggle solutions.
+ Popular in 90% of winning Kaggle solutions.
 
 ---
 
@@ -47,7 +47,7 @@ Boosting models that build trees sequentially while correcting previous errors. 
 Finds the best boundary that separates different classes.
 
 **Example Use Case:**  
-➡️ Classifying emails as spam or not spam.
+ Classifying emails as spam or not spam.
 
 ---
 
@@ -56,7 +56,7 @@ Finds the best boundary that separates different classes.
 Groups similar customers/items into clusters without using labels.
 
 **Example Use Case:**  
-➡️ Customer segmentation for marketing campaigns.
+ Customer segmentation for marketing campaigns.
 
 ---
 
@@ -65,7 +65,7 @@ Groups similar customers/items into clusters without using labels.
 Uses probability to classify text.
 
 **Example Use Case:**  
-➡️ Spam detection, customer reviews sentiment analysis.
+ Spam detection, customer reviews sentiment analysis.
 
 ---
 
@@ -74,7 +74,7 @@ Uses probability to classify text.
 Brain-inspired models used for complex learning tasks.
 
 **Example Use Case:**  
-➡️ Predicting loan defaults or customer churn.
+ Predicting loan defaults or customer churn.
 
 ---
 
@@ -83,7 +83,7 @@ Brain-inspired models used for complex learning tasks.
 Excellent for image-related tasks.
 
 **Example Use Case:**  
-➡️ Cheque image verification, ID document scanning.
+ Cheque image verification, ID document scanning.
 
 ---
 
@@ -92,11 +92,11 @@ Excellent for image-related tasks.
 Designed for sequence and time-series data.
 
 **Example Use Case:**  
-➡️ Predicting bank stock trends, customer transaction patterns.
+ Predicting bank stock trends, customer transaction patterns.
 
 ---
 
-## 🔎 Quick Summary (One-Liners)
+##  Quick Summary (One-Liners)
 
 | Model | Simple Meaning |
 |-------|----------------|
